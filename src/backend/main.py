@@ -1,16 +1,29 @@
-# This is a sample Python script.
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 
+# serve index.html to user
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# serve a silly little test url
+@app.route('/hello')
+def helloWorld():
+    return "<p>Hello, World! penis</p>"
 
+@socketio.on('chat_message')
+def handle_message(data):
+    print(f"Python received: {data}")
+    # Broadcast that message out to ALL connected browsers
+    emit('new_message', data, broadcast=True)
 
-# Press the green button in the gutter to run the script.
+@app.route('/api/ping')
+def ping():
+    return {"message": "Python received your request!", "status": "online"}
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    socketio.run(app, debug=True)
